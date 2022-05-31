@@ -40,7 +40,7 @@ public class MainGame extends Game {
 		this.setHighscore(prefs.getInteger("highscore"));
         this.setCoins(prefs.getInteger("coins"));
 		ownedCarsId = new ArrayList<Integer>();
-		String ownedCars = prefs.getString("ownedCars");
+		String ownedCars = "0 1 2 3 4 5 6"/*prefs.getString("ownedCars")*/;
 		if(ownedCars == ""){
 			prefs.putString("ownedCars","0");
 			prefs.putInteger("selectedCar",0);
