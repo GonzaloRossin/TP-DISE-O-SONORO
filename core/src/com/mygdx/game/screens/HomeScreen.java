@@ -3,7 +3,6 @@ package com.mygdx.game.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -11,15 +10,10 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.mygdx.game.Constants;
 import com.mygdx.game.MainGame;
-import com.mygdx.game.screens.BaseScreen;
-
-import sun.applet.Main;
+import com.mygdx.game.MusicPlayer;
 
 public class HomeScreen extends BaseScreen {
 
@@ -128,7 +122,8 @@ public class HomeScreen extends BaseScreen {
         maxScore.setPosition(Constants.VIEWPORT_WIDTH.getValue() - maxScore.getText().length*38 - PADDING,
                 Constants.VIEWPORT_HEIGHT.getValue() - maxScore.getHeight()*2 - PADDING);
         coinDisplay.setText(" " + game.getCoins());
-
+        this.musicPlayer.setTrack(MusicPlayer.MusicTrack.MainMenu);
+        this.musicPlayer.play();
     }
 
     @Override
@@ -156,6 +151,7 @@ public class HomeScreen extends BaseScreen {
     public void hide() {
         Gdx.input.setInputProcessor(null);
         stage.dispose();
+        this.musicPlayer.stop();
     }
 
     @Override
@@ -163,5 +159,6 @@ public class HomeScreen extends BaseScreen {
         Gdx.gl.glClearColor(0.4f,0.5f,0.8f,1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         stage.dispose();
+        this.musicPlayer.disposeTrack();
     }
 }

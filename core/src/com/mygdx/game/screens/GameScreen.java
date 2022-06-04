@@ -2,6 +2,7 @@ package com.mygdx.game.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -25,6 +26,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.mygdx.game.GarageCars;
+import com.mygdx.game.MusicPlayer;
+import com.mygdx.game.SoundsPlayer;
 import com.mygdx.game.actors.Background;
 import com.mygdx.game.actors.Car;
 import com.mygdx.game.Constants;
@@ -33,6 +36,7 @@ import com.mygdx.game.actors.Coin;
 import com.mygdx.game.actors.Player;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -72,6 +76,9 @@ public class GameScreen extends BaseScreen {
     private OrthographicCamera camera;
     private boolean lost;
     private boolean stopped;
+    private Music carAccelerationSound = Gdx.audio.newMusic(Gdx.files.internal("sounds/car_acceleration.mp3"));
+    private Music policeSiren = Gdx.audio.newMusic(Gdx.files.internal("sounds/police_siren.mp3"));
+    private Music highwayBackground = Gdx.audio.newMusic(Gdx.files.internal("sounds/highway_background.mp3"));
 
     public GameScreen(final MainGame game) {
         super(game);
@@ -131,6 +138,12 @@ public class GameScreen extends BaseScreen {
         coinDisplay.setFontScale(FONT_SCALE);
         coinDisplay.setPosition(coinIcon.getX() + coinIcon.getWidth(),
                 Constants.VIEWPORT_HEIGHT.getValue() - coinDisplay.getHeight()* FONT_SCALE - PADDING);
+        carAccelerationSound.setLooping(true);
+        policeSiren.setLooping(true);
+        highwayBackground.setLooping(true);
+        carAccelerationSound.setVolume(0.35f);
+        policeSiren.setVolume(0.15f);
+        highwayBackground.setVolume(0.5f);
     }
     private void reset(){
         stopped = false;
@@ -151,6 +164,10 @@ public class GameScreen extends BaseScreen {
         player.getBody().setLinearVelocity(0,0);
         player.getBody().setAngularVelocity(0);
         player.getBody().setTransform(new Vector2(WIDTH/2f,HEIGHT/2f),0);
+        musicPlayer.play();
+        carAccelerationSound.play();
+        policeSiren.play();
+        highwayBackground.play();
         setGameOverVisible(false);
     }
     private void setGameOverVisible(boolean visible){
@@ -180,6 +197,8 @@ public class GameScreen extends BaseScreen {
         background.setSpeed(speed);
         //Creating world.
         world = new World(new Vector2(0,0),true);
+        final SoundsPlayer soundsPlayer = this.soundsPlayer;
+        final MusicPlayer musicPlayer = this.musicPlayer;
         world.setContactListener(new ContactListener() {
 
             private int areColliding(Contact contact,Object objectA, Object objectB) {
@@ -194,6 +213,11 @@ public class GameScreen extends BaseScreen {
             public void beginContact(Contact contact) {
                 if(areColliding(contact,Player.getUserData(), Car.getUserData()) != -1){
                     lost = true;
+                    carAccelerationSound.stop();
+                    policeSiren.stop();
+                    highwayBackground.stop();
+                    soundsPlayer.playSoundEffect(SoundsPlayer.SoundEffect.CarCrash);
+                    musicPlayer.stop();
                 }
             }
 
@@ -219,6 +243,7 @@ public class GameScreen extends BaseScreen {
         stage.addActor(retryButton);
         stage.addActor(homeButton);
         player.addListener(new ActorGestureListener(){
+            long lastTireSound = 0;
             public void pan(InputEvent event,float x,float y,float deltaX,float deltaY){
                 if(!stopped) {
                     player.getBody().setTransform(new Vector2(player.getBody().getPosition().x + deltaX / Constants.PPM.getValue(),
@@ -227,6 +252,11 @@ public class GameScreen extends BaseScreen {
                     Rectangle playerHitbox = new Rectangle(player.getX(),player.getY(),player.getWidth(),player.getHeight());
                     Coin touchingCoin = null;
                     Rectangle coinHitbox = null;
+                    if(System.currentTimeMillis() - lastTireSound > 500 && (deltaX > 20 || deltaY > 20)) {
+                        Random rand = new Random();
+                        soundsPlayer.playSoundEffect(rand.nextFloat() > 0.5 ? SoundsPlayer.SoundEffect.TireScreech2 : SoundsPlayer.SoundEffect.TireScreech3, 0.5f);
+                        lastTireSound = System.currentTimeMillis();
+                    }
                     for(Coin coin : coins){
                         coinHitbox = new Rectangle(coin.getX(),coin.getY(),coin.getWidth(),coin.getHeight());
                         if(playerHitbox.overlaps(coinHitbox)){
@@ -235,6 +265,7 @@ public class GameScreen extends BaseScreen {
                         }
                     }
                     if(touchingCoin != null){
+                        soundsPlayer.playSoundEffect(SoundsPlayer.SoundEffect.CollectCoin);
                         touchingCoin.remove();
                         coins.remove(touchingCoin);
                         int earnedCoins = 0;
@@ -254,6 +285,17 @@ public class GameScreen extends BaseScreen {
         coinDisplay.setText(" " + game.getCoins());
         scoreDisplay.setPosition(Constants.VIEWPORT_WIDTH.getValue() - scoreDisplay.getWidth()* FONT_SCALE - PADDING,
                 Constants.VIEWPORT_HEIGHT.getValue() - scoreDisplay.getHeight()* FONT_SCALE - PADDING);
+
+        if(game.getDifficulty() == MainGame.LIGHT_TRAFFIC_DIFFICULTY) {
+            this.musicPlayer.setTrack(MusicPlayer.MusicTrack.EasyLevel);
+        }
+        else if(game.getDifficulty() == MainGame.MEDIUM_TRAFFIC_DIFFICULTY) {
+            this.musicPlayer.setTrack(MusicPlayer.MusicTrack.MediumLevel, 0.7f);
+        }
+        else {
+            this.musicPlayer.setTrack(MusicPlayer.MusicTrack.HardLevel, 0.7f);
+        }
+        this.musicPlayer.play();
     }
     private float previousScore;
     private float positionScoreFactor;
@@ -367,11 +409,17 @@ public class GameScreen extends BaseScreen {
             car.destroy();
         cars.clear();
         stage.dispose();
+        this.musicPlayer.stop();
+        this.soundsPlayer.stopAllSounds();
+        carAccelerationSound.stop();
+        policeSiren.stop();
+        highwayBackground.stop();
     }
 
     @Override
     public void dispose() {
         renderer.dispose();
         world.dispose();
+        this.musicPlayer.disposeTrack();
     }
 }

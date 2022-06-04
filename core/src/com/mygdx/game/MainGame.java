@@ -54,9 +54,6 @@ public class MainGame extends Game {
 				ownedCarsId.add(Integer.parseInt(car));
 			selectedCar = prefs.getInteger("selectedCar");
 		}
-		backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("background_music.wav"));
-		backgroundMusic.setLooping(true);
-		backgroundMusic.play();
 		setDifficulty(0);
 		getManager().load("backgrounds/background.png",Texture.class);
 		getManager().load("backgrounds/background_marks.png",Texture.class);
@@ -158,6 +155,7 @@ public class MainGame extends Game {
 	public int getSelectedCar() {
 		return selectedCar;
 	}
+
 
 	public void setSelectedCar(int selectedCar) {
 		this.selectedCar = selectedCar;

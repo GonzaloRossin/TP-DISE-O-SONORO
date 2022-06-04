@@ -19,6 +19,8 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.mygdx.game.Constants;
 import com.mygdx.game.GarageCars;
 import com.mygdx.game.MainGame;
+import com.mygdx.game.MusicPlayer;
+import com.mygdx.game.SoundsPlayer;
 
 
 public class GarageScreen extends BaseScreen {
@@ -200,6 +202,7 @@ public class GarageScreen extends BaseScreen {
     @Override
     public void show() {
         stage = new Stage(new FitViewport(Constants.VIEWPORT_WIDTH.getValue() , Constants.VIEWPORT_HEIGHT.getValue()));
+        final SoundsPlayer soundsPlayer = this.soundsPlayer;
         stage.addListener(new InputListener(){
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
@@ -208,6 +211,7 @@ public class GarageScreen extends BaseScreen {
                 Rectangle rectangle = new Rectangle(currentColor.getX(),currentColor.getY(),currentColor.getWidth(),currentColor.getHeight());
                 if(!rectangle.contains(x,y))
                     return true;
+                soundsPlayer.playSoundEffect(current.getStartSound());
                 Gdx.app.setLogLevel(Application.LOG_DEBUG);
                 if(game.getOwnedCars().get(game.getSelectedCar()).equals(current.getId())) {
                     return true;
@@ -254,6 +258,8 @@ public class GarageScreen extends BaseScreen {
         stage.addActor(carPortrait);
         coinDisplay.setText(" " + game.getCoins());
         showCarData();
+        this.musicPlayer.setTrack(MusicPlayer.MusicTrack.GarageMenu);
+        this.musicPlayer.play();
     }
 
     @Override
@@ -282,6 +288,7 @@ public class GarageScreen extends BaseScreen {
 
         Gdx.input.setInputProcessor(null);
         stage.dispose();
+        this.musicPlayer.stop();
     }
 
     @Override
@@ -290,5 +297,6 @@ public class GarageScreen extends BaseScreen {
         Gdx.gl.glClearColor(0.4f,0.5f,0.8f,1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         stage.dispose();
+        this.musicPlayer.disposeTrack();
     }
 }

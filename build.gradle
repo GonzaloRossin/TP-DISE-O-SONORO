@@ -6,7 +6,10 @@ buildscript {
         mavenCentral()
         maven { url "https://plugins.gradle.org/m2/" }
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
-        google()
+        maven {
+            url 'https://maven.google.com/'
+            name 'Google'
+        }
         jcenter()
     }
     dependencies {
@@ -35,7 +38,10 @@ allprojects {
         mavenLocal()
         mavenCentral()
         jcenter()
-        google()
+        maven {
+            url 'https://maven.google.com/'
+            name 'Google'
+        }
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url "https://oss.sonatype.org/content/repositories/releases/" }
     }
