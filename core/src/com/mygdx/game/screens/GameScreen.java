@@ -25,6 +25,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.mygdx.game.DialogsPlayer;
 import com.mygdx.game.GarageCars;
 import com.mygdx.game.MusicPlayer;
 import com.mygdx.game.SoundsPlayer;
@@ -216,6 +217,7 @@ public class GameScreen extends BaseScreen {
                     carAccelerationSound.stop();
                     policeSiren.stop();
                     highwayBackground.stop();
+                    dialogsPlayer.stopAllDialogs();
                     soundsPlayer.playSoundEffect(SoundsPlayer.SoundEffect.CarCrash);
                     musicPlayer.stop();
                 }
@@ -299,6 +301,7 @@ public class GameScreen extends BaseScreen {
     }
     private float previousScore;
     private float positionScoreFactor;
+    private double lastCommTime = 0;
     @Override
     public void render(float delta) {
         if(lost){
@@ -361,6 +364,10 @@ public class GameScreen extends BaseScreen {
         //Debugging
         //renderer.render(world,camera.combined);
         stage.draw();
+        if(System.currentTimeMillis() - lastCommTime > 5000) {
+            DialogsPlayer.Dialog comm = dialogsPlayer.getRandomComm();
+            dialogsPlayer.play(comm, 0.4f);
+        }
     }
 
     private void spawnCars() {
@@ -411,6 +418,7 @@ public class GameScreen extends BaseScreen {
         stage.dispose();
         this.musicPlayer.stop();
         this.soundsPlayer.stopAllSounds();
+        this.dialogsPlayer.stopAllDialogs();
         carAccelerationSound.stop();
         policeSiren.stop();
         highwayBackground.stop();
